@@ -1,0 +1,9 @@
+---
+  - hosts: localhost
+    roles:
+      - createvm
+    post_tasks:
+      - name: Refresh inventory to ensure new instances are recognized
+        meta: refresh_inventory
+
+

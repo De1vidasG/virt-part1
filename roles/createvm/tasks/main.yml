@@ -1,0 +1,107 @@
+---
+
+    - name: Ensure ~/.ssh exists
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/.ssh"
+        state: directory
+        mode: "0700"
+
+    - name: Generate SSH key for Ansible (ed25519)
+      community.crypto.openssh_keypair:
+        path: "{{ ssh_key_path }}"
+        type: ed25519
+      register: ssh_key
+
+
+    - name: python3-pip install
+      become: true
+      apt:
+        name: python3-pip
+        state: present
+        update_cache: yes
+
+    - name: Install pyone library for one_vm
+      become: true
+      pip:
+        name: pyone
+        extra_args: --break-system-packages
+        state: present
+
+    - name: Create web-VM
+      community.general.one_vm:
+        api_url: https://grid5.mif.vu.lt/cloud3/RPC2
+        api_username: degi0449
+        api_password: Deividas1 #person nr1 mif password
+        template_id: 3016
+        attributes:
+          name: webserver-vm
+        disk_size: 8 GB
+        memory: 512 MB
+        vcpu: 1
+        cpu: 0.2
+        updateconf:
+          CONTEXT:
+            SSH_PUBLIC_KEY: "{{ ssh_key.public_key }}"
+        state: present
+      register: webserver_vm
+
+    - name: Create db-VM
+      community.general.one_vm:
+        api_url: https://grid5.mif.vu.lt/cloud3/RPC2
+        api_username: degi0449
+        api_password: Deividas1
+        template_id: 3016
+        attributes:
+          name: database-vm
+        disk_size: 16 GB
+        memory: 512 MB
+        vcpu: 1
+        cpu: 0.2
+        updateconf:
+          CONTEXT:
+            SSH_PUBLIC_KEY: "{{ ssh_key.public_key }}"
+        state: present
+      register: database_vm
+
+    - name: Create client-VM
+      community.general.one_vm:
+        api_url: https://grid5.mif.vu.lt/cloud3/RPC2
+        api_username: degi0449
+        api_password: Deividas1 #personnr3 mif password
+        template_id: 3016
+        attributes:
+          name: client-vm
+        disk_size: 8 GB
+        memory: 512 MB
+        vcpu: 1
+        cpu: 0.2
+        updateconf:
+          CONTEXT:
+            SSH_PUBLIC_KEY: "{{ ssh_key.public_key }}"
+        state: present
+      register: client_vm
+
+
+    - name: Extract VM IPs
+      set_fact:
+        web_ip: "{{ webserver_vm.instances[0].networks[0].ip }}"
+        db_ip: "{{ database_vm.instances[0].networks[0].ip }}"
+        client_ip: "{{ client_vm.instances[0].networks[0].ip }}"
+
+
+    - name: fillup inventory with generated vms ip addresses
+      copy:
+        dest: ./inventory
+        content: |
+          [web]
+          web-vm ansible_host={{ web_ip }} ansible_user=root
+          [db]
+          db-vm ansible_host={{ db_ip }} ansible_user=root
+
+          [client]
+          client-vm ansible_host={{ client_ip }} ansible_user=root
+
+          [all:vars]
+          ansible_ssh_private_key_file={{ ssh_key_path }}
+          ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+
