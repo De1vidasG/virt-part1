@@ -8,4 +8,23 @@
       - name: Refresh inventory to ensure new instances are recognized
         meta: refresh_inventory
 
+ # - hosts: web
+ #   become: true
+ #   roles:
+ #     - web
 
+ # - hosts: db
+ #   become: true
+ #   roles:
+ #     - database
+
+ # - hosts: dns
+ #   become: true
+ #   roles:
+ #     - dns
+
+
+ # - hosts: client
+ #   become: true
+ #   roles:
+ #     - client
