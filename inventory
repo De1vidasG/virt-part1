@@ -1,10 +1,11 @@
 [web]
-web-vm ansible_host=10.0.1.122 ansible_user=root
+web-vm ansible_host=10.0.0.212 ansible_user=root
 [db]
-db-vm ansible_host=10.0.1.233 ansible_user=root
-
+db-vm ansible_host=10.0.1.122 ansible_user=root
 [client]
-client-vm ansible_host=10.0.0.96 ansible_user=root
+client-vm ansible_host=10.0.1.233 ansible_user=root
+[dns]
+dns-vm ansible_host=10.0.0.96 ansible_user=root
 
 [all:vars]
 ansible_ssh_private_key_file=/root/.ssh/ansible_ed25519

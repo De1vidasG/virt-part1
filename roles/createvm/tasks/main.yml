@@ -30,9 +30,9 @@
     - name: Create web-VM
       community.general.one_vm:
         api_url: https://grid5.mif.vu.lt/cloud3/RPC2
-        api_username: degi0449
-        api_password: Deividas1 #person nr1 mif password
-        template_id: 3016
+        api_username: "{{ web_user}}"
+        api_password: "{{user1_password}}" #person nr1 mif password
+        template_id: 2646
         attributes:
           name: webserver-vm
         disk_size: 8 GB
@@ -48,12 +48,12 @@
     - name: Create db-VM
       community.general.one_vm:
         api_url: https://grid5.mif.vu.lt/cloud3/RPC2
-        api_username: degi0449
-        api_password: Deividas1
-        template_id: 3016
+        api_username: "{{ db_user }}"
+        api_password: "{{user2_password}}"
+        template_id: 2646
         attributes:
           name: database-vm
-        disk_size: 16 GB
+        disk_size: 6 GB
         memory: 512 MB
         vcpu: 1
         cpu: 0.2
@@ -66,12 +66,12 @@
     - name: Create client-VM
       community.general.one_vm:
         api_url: https://grid5.mif.vu.lt/cloud3/RPC2
-        api_username: degi0449
-        api_password: Deividas1 #personnr3 mif password
-        template_id: 3016
+        api_username: "{{client_user}}"
+        api_password: "{{user3_password}}" #personnr3 mif password
+        template_id: 2646
         attributes:
           name: client-vm
-        disk_size: 8 GB
+        disk_size: 6 GB
         memory: 512 MB
         vcpu: 1
         cpu: 0.2
@@ -81,12 +81,30 @@
         state: present
       register: client_vm
 
+    - name: Create dnsvm
+      community.general.one_vm:
+        api_url: https://grid5.mif.vu.lt/cloud3/RPC2
+        api_username: "{{dns_user}}"
+        api_password: "{{user4_password}}" #personnr3 mif password
+        template_id: 2646
+        attributes:
+          name: dns-vm
+        disk_size: 8 GB
+        memory: 512 MB
+        vcpu: 1
+        cpu: 0.2
+        updateconf:
+          CONTEXT:
+            SSH_PUBLIC_KEY: "{{ ssh_key.public_key }}"
+        state: present
+      register: dns_vm
 
     - name: Extract VM IPs
       set_fact:
         web_ip: "{{ webserver_vm.instances[0].networks[0].ip }}"
         db_ip: "{{ database_vm.instances[0].networks[0].ip }}"
         client_ip: "{{ client_vm.instances[0].networks[0].ip }}"
+        dns_ip: "{{ dns_vm.instances[0].networks[0].ip }}"
 
 
     - name: fillup inventory with generated vms ip addresses
@@ -97,9 +115,10 @@
           web-vm ansible_host={{ web_ip }} ansible_user=root
           [db]
           db-vm ansible_host={{ db_ip }} ansible_user=root
-
           [client]
           client-vm ansible_host={{ client_ip }} ansible_user=root
+          [dns]
+          dns-vm ansible_host={{ dns_ip }} ansible_user=root
 
           [all:vars]
           ansible_ssh_private_key_file={{ ssh_key_path }}
