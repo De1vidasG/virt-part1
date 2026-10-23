@@ -1,2 +1,2 @@
 ---
-ssh_key_path: "{{ lookup('env', 'HOME') }}/.ssh/ansible_ed25519"
+ssh_key_path: "{{ lookup('env', 'HOME') }}/.ssh/id_ed25519"
